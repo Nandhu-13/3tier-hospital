@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hospital-config
+  namespace: hospital-system
+data:
+  DB_PORT:   "3306"          # MySQL default port
+  FLASK_ENV: "production"
+  PORT:      "5000"

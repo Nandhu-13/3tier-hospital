@@ -1,0 +1,66 @@
+# Frontend → Backend → Azure PostgreSQL (external)
+# Frontend cannot reach Azure DB directly
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: hospital-system
+spec:
+  podSelector:
+    matchLabels:
+      tier: application
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              tier: presentation
+      ports:
+        - protocol: TCP
+          port: 5000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 5000
+  egress:
+    - ports:         # Allow outbound to Azure PostgreSQL (external)
+        - protocol: TCP
+          port: 5432
+    - ports:         # DNS
+        - protocol: UDP
+          port: 53
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: hospital-system
+spec:
+  podSelector:
+    matchLabels:
+      tier: presentation
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              tier: application
+      ports:
+        - protocol: TCP
+          port: 5000
+    - ports:
+        - protocol: UDP
+          port: 53

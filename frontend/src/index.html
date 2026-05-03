@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediCore HMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --ink:#0b1622;--ink2:#3d5166;--ink3:#8099ae;
+      --cream:#f7f3ee;--cream2:#ede8e1;
+      --teal:#00897b;--teal-l:#e0f2f1;
+      --blue:#1565c0;--blue-l:#e3f2fd;
+      --red:#c62828;--red-l:#ffebee;
+      --amber:#f57f17;--amber-l:#fff8e1;
+      --green:#2e7d32;--green-l:#e8f5e9;
+      --border:#ddd6cc;
+      --r:12px;
+      --shadow:0 2px 16px rgba(11,22,34,.08);
+      --shadow-lg:0 8px 40px rgba(11,22,34,.14);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;display:flex}
+
+    /* ── Sidebar ── */
+    .sidebar{
+      width:220px;min-height:100vh;background:var(--ink);
+      display:flex;flex-direction:column;flex-shrink:0;
+      position:fixed;top:0;left:0;z-index:200;
+    }
+    .logo{padding:28px 20px 22px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .logo-mark{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-0.5px}
+    .logo-mark span{color:#4dd0c4}
+    .logo-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
+    .nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+    .ni{
+      display:flex;align-items:center;gap:11px;padding:11px 12px;
+      border-radius:9px;cursor:pointer;color:rgba(255,255,255,.5);
+      font-size:13.5px;font-weight:500;transition:all .18s;
+    }
+    .ni:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+    .ni.on{background:rgba(77,208,196,.12);color:#4dd0c4}
+    .ni-ic{font-size:16px;width:20px;text-align:center}
+    .sidebar-foot{padding:14px;border-top:1px solid rgba(255,255,255,.07)}
+    .env-badge{background:rgba(77,208,196,.15);color:#4dd0c4;font-size:10px;font-weight:600;
+      letter-spacing:1.5px;text-transform:uppercase;padding:5px 10px;border-radius:6px;text-align:center}
+
+    /* ── Main ── */
+    .main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+    .topbar{
+      background:#fff;border-bottom:1px solid var(--border);
+      padding:0 32px;height:60px;display:flex;align-items:center;
+      justify-content:space-between;position:sticky;top:0;z-index:100;
+      box-shadow:0 1px 0 var(--border);
+    }
+    .page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--ink)}
+    .topbar-r{display:flex;align-items:center;gap:14px}
+    .conn-pill{
+      display:flex;align-items:center;gap:7px;padding:5px 12px;
+      background:var(--cream);border:1px solid var(--border);border-radius:20px;
+      font-size:12px;color:var(--ink2);
+    }
+    .dot{width:7px;height:7px;border-radius:50%;background:#9e9e9e;flex-shrink:0}
+    .dot.ok{background:#43a047;box-shadow:0 0 0 3px rgba(67,160,71,.2)}
+    .dot.err{background:var(--red)}
+    .az-badge{background:var(--blue-l);color:var(--blue);font-size:11px;font-weight:600;
+      padding:4px 10px;border-radius:6px;letter-spacing:.3px}
+    .avatar{width:36px;height:36px;border-radius:50%;background:var(--ink);
+      color:#4dd0c4;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
+      display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+    /* ── Content ── */
+    .content{padding:28px 32px;flex:1}
+    .pg{display:none}.pg.on{display:block}
+
+    /* ── Stats ── */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:26px}
+    .sc{
+      background:#fff;border-radius:var(--r);padding:20px;
+      border:1px solid var(--border);box-shadow:var(--shadow);
+      display:flex;align-items:flex-start;gap:14px;
+      transition:transform .2s,box-shadow .2s;
+    }
+    .sc:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+    .sc-ic{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .sc-ic.t{background:var(--teal-l)}.sc-ic.b{background:var(--blue-l)}
+    .sc-ic.g{background:var(--green-l)}.sc-ic.a{background:var(--amber-l)}
+    .sc-lbl{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.8px;text-transform:uppercase}
+    .sc-val{font-family:'Syne',sans-serif;font-weight:700;font-size:30px;color:var(--ink);line-height:1.15;margin:3px 0}
+    .sc-sub{font-size:11px;color:var(--green)}
+
+    /* ── Panel ── */
+    .panel{background:#fff;border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:22px}
+    .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+    .pt{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--ink)}
+    .pb{padding:0}
+
+    /* ── Buttons ── */
+    .btn{padding:9px 17px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13.5px;
+      font-weight:500;cursor:pointer;border:none;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+    .btn-dark{background:var(--ink);color:#fff}.btn-dark:hover{background:#1a2e42}
+    .btn-teal{background:var(--teal);color:#fff}.btn-teal:hover{background:#00695c}
+    .btn-ghost{background:var(--cream);color:var(--ink2);border:1px solid var(--border)}
+    .btn-ghost:hover{background:var(--cream2)}
+    .btn-del{background:var(--red-l);color:var(--red);font-size:12px;padding:5px 11px}
+    .btn-del:hover{background:#ffcdd2}
+    .btn-ok{background:var(--green-l);color:var(--green);font-size:12px;padding:5px 11px}
+    .btn-ok:hover{background:#c8e6c9}
+
+    /* ── Table ── */
+    .tw{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:13.5px}
+    thead th{background:var(--cream);color:var(--ink3);font-size:10.5px;font-weight:700;
+      letter-spacing:.9px;text-transform:uppercase;padding:11px 18px;text-align:left;
+      border-bottom:1.5px solid var(--border)}
+    tbody td{padding:13px 18px;border-bottom:1px solid var(--border);vertical-align:middle}
+    tbody tr:hover{background:var(--cream)}
+    tbody tr:last-child td{border-bottom:none}
+    .tid{font-size:11px;color:var(--ink3);font-family:monospace}
+    .tname{font-weight:600}
+
+    /* ── Status/Badges ── */
+    .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+    .tag::before{content:'●';font-size:7px}
+    .tag-avail{background:var(--green-l);color:var(--green)}
+    .tag-busy{background:var(--red-l);color:var(--red)}
+    .tag-leave{background:var(--amber-l);color:var(--amber)}
+    .tag-sched{background:var(--blue-l);color:var(--blue)}
+    .tag-done{background:var(--green-l);color:var(--green)}
+    .tag-cancel{background:var(--red-l);color:var(--red)}
+    .blood{background:var(--red-l);color:var(--red);padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700}
+
+    /* ── Modal ── */
+    .overlay{position:fixed;inset:0;background:rgba(11,22,34,.45);display:none;
+      align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px)}
+    .overlay.on{display:flex}
+    .modal{background:#fff;border-radius:16px;padding:30px;width:500px;max-width:94vw;
+      box-shadow:var(--shadow-lg);animation:mi .22s ease}
+    @keyframes mi{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+    .modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:20px;color:var(--ink)}
+    .fg{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .fi{display:flex;flex-direction:column;gap:4px}
+    .fi.full{grid-column:1/-1}
+    .fi label{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.6px;text-transform:uppercase}
+    .fi input,.fi select,.fi textarea{
+      padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);
+      background:var(--cream);transition:border .15s;
+    }
+    .fi input:focus,.fi select:focus,.fi textarea:focus{outline:none;border-color:var(--teal)}
+    .mf{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
+
+    /* ── Dept cards ── */
+    .dg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px}
+    .dc{
+      background:linear-gradient(135deg,var(--ink) 0%,#1a3a52 100%);
+      border-radius:11px;padding:20px;color:#fff;overflow:hidden;position:relative;
+    }
+    .dc::after{content:'';position:absolute;right:-15px;top:-15px;
+      width:80px;height:80px;background:rgba(255,255,255,.05);border-radius:50%}
+    .dc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:2px}
+    .dc-head{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px}
+    .dc-bar{background:rgba(255,255,255,.15);border-radius:4px;height:5px;margin-bottom:7px}
+    .dc-fill{background:#4dd0c4;height:5px;border-radius:4px;transition:width .7s ease}
+    .dc-stat{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.6)}
+
+    /* ── Search ── */
+    .search{padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:13.5px;width:220px;background:var(--cream)}
+    .search:focus{outline:none;border-color:var(--teal)}
+
+    /* ── Empty ── */
+    .empty{text-align:center;padding:48px;color:var(--ink3)}
+    .empty-i{font-size:44px;margin-bottom:12px}
+
+    /* ── Toast ── */
+    .toast{
+      position:fixed;bottom:24px;right:24px;padding:13px 18px;
+      border-radius:10px;font-size:13.5px;font-weight:500;
+      box-shadow:var(--shadow-lg);z-index:9999;
+      transform:translateY(70px);opacity:0;transition:all .25s;
+      display:flex;align-items:center;gap:9px;max-width:320px;
+    }
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.ok{background:#fff;border-left:4px solid var(--green);color:var(--ink)}
+    .toast.err{background:#fff;border-left:4px solid var(--red);color:var(--ink)}
+
+    /* ── Azure info bar ── */
+    .az-bar{
+      background:var(--blue-l);border:1px solid #bbdefb;border-radius:9px;
+      padding:12px 18px;margin-bottom:22px;display:flex;align-items:center;gap:10px;
+      font-size:13px;color:var(--blue);
+    }
+    .az-bar strong{font-weight:600}
+
+    @media(max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}.dg{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Vcube HealthCare Solutions</div>
+    <div class="logo-sub">Hospital Management</div>
+  </div>
+  <div class="nav">
+    <div class="ni on"  onclick="go('dashboard')"><span class="ni-ic">▦</span>Dashboard</div>
+    <div class="ni"     onclick="go('patients')"><span class="ni-ic">🧑</span>Patients</div>
+    <div class="ni"     onclick="go('doctors')"><span class="ni-ic">⚕</span>Doctors</div>
+    <div class="ni"     onclick="go('appointments')"><span class="ni-ic">📅</span>Appointments</div>
+    <div class="ni"     onclick="go('departments')"><span class="ni-ic">🏨</span>Departments</div>
+  </div>
+  <div class="sidebar-foot">
+    <div class="env-badge">Azure MySQL</div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="ptitle">Dashboard</div>
+    <div class="topbar-r">
+      <div class="conn-pill"><div class="dot" id="adot"></div><span id="astat">Connecting…</span></div>
+      <div class="az-badge">☁ Azure MySQL</div>
+      <div class="avatar">AD</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="pg on" id="pg-dashboard">
+      <div class="az-bar">☁ <strong>Database:</strong> Connected to Azure Database for MySQL — Flexible Server &nbsp;|&nbsp; Backend: Python Flask + Gunicorn &nbsp;|&nbsp; Deployed on Kubernetes</div>
+      <div class="stats">
+        <div class="sc"><div class="sc-ic t">🧑</div><div><div class="sc-lbl">Patients</div><div class="sc-val" id="s-pat">–</div><div class="sc-sub">Active records</div></div></div>
+        <div class="sc"><div class="sc-ic b">⚕</div><div><div class="sc-lbl">Doctors</div><div class="sc-val" id="s-doc">–</div><div class="sc-sub">On staff</div></div></div>
+        <div class="sc"><div class="sc-ic g">📅</div><div><div class="sc-lbl">Scheduled</div><div class="sc-val" id="s-apt">–</div><div class="sc-sub">Appointments</div></div></div>
+        <div class="sc"><div class="sc-ic a">🏨</div><div><div class="sc-lbl">Departments</div><div class="sc-val" id="s-dep">–</div><div class="sc-sub">Active units</div></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="panel">
+          <div class="ph"><div class="pt">Recent Patients</div></div>
+          <div style="padding:4px 0" id="d-patients"><div class="empty"><div class="empty-i">⏳</div>Loading…</div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Recent Appointments</div></div>
+          <div style="padding:4px 0" id="d-appts"><div class="empty"><div class="empty-i">⏳</div>Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENTS -->
+    <div class="pg" id="pg-patients">
+      <div class="panel">
+        <div class="ph">
+          <div class="pt">Patient Registry</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input class="search" id="psearch" placeholder="🔍 Search…" oninput="filt('pt','psearch')"/>
+            <button class="btn btn-dark" onclick="openM('pm')">+ Add Patient</button>
+          </div>
+        </div>
+        <div class="tw">
+          <table id="pt">
+            <thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Phone</th><th>Blood</th><th>Actions</th></tr></thead>
+            <tbody id="ptb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTORS -->
+    <div class="pg" id="pg-doctors">
+      <div class="panel">
+        <div class="ph">
+          <div class="pt">Medical Staff</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input class="search" id="dsearch" placeholder="🔍 Search…" oninput="filt('dt','dsearch')"/>
+            <button class="btn btn-dark" onclick="openM('dm')">+ Add Doctor</button>
+          </div>
+        </div>
+        <div class="tw">
+          <table id="dt">
+            <thead><tr><th>ID</th><th>Name</th><th>Specialization</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="dtb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="pg" id="pg-appointments">
+      <div class="panel">
+        <div class="ph">
+          <div class="pt">Appointments</div>
+          <button class="btn btn-dark" onclick="openM('am');loadDD()">+ New Appointment</button>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Specialization</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="atb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPARTMENTS -->
+    <div class="pg" id="pg-departments">
+      <div class="panel">
+        <div class="ph"><div class="pt">Hospital Departments</div></div>
+        <div class="dg" id="dgrid"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Patient Modal -->
+<div class="overlay" id="pm">
+  <div class="modal">
+    <div class="modal-title">🧑 Register Patient</div>
+    <div class="fg">
+      <div class="fi full"><label>Full Name *</label><input id="p-n" placeholder="e.g. Ramesh Patel"/></div>
+      <div class="fi"><label>Age *</label><input id="p-a" type="number" placeholder="30"/></div>
+      <div class="fi"><label>Gender *</label><select id="p-g"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="fi"><label>Phone</label><input id="p-ph" placeholder="9876543210"/></div>
+      <div class="fi"><label>Blood Group</label><select id="p-b"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+      <div class="fi full"><label>Email</label><input id="p-e" type="email" placeholder="patient@email.com"/></div>
+      <div class="fi full"><label>Address</label><textarea id="p-ad" rows="2" placeholder="Address…"></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeM('pm')">Cancel</button>
+      <button class="btn btn-teal" onclick="addPatient()">Save Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- Doctor Modal -->
+<div class="overlay" id="dm">
+  <div class="modal">
+    <div class="modal-title">⚕ Add Doctor</div>
+    <div class="fg">
+      <div class="fi full"><label>Full Name *</label><input id="d-n" placeholder="Dr. Arjun Sharma"/></div>
+      <div class="fi"><label>Specialization *</label><input id="d-s" placeholder="Cardiologist"/></div>
+      <div class="fi"><label>Availability</label><select id="d-av"><option>Available</option><option>Busy</option><option>On Leave</option></select></div>
+      <div class="fi"><label>Phone</label><input id="d-ph" placeholder="9876543210"/></div>
+      <div class="fi"><label>Email</label><input id="d-e" type="email" placeholder="doctor@hospital.com"/></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeM('dm')">Cancel</button>
+      <button class="btn btn-teal" onclick="addDoctor()">Save Doctor</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Modal -->
+<div class="overlay" id="am">
+  <div class="modal">
+    <div class="modal-title">📅 Schedule Appointment</div>
+    <div class="fg">
+      <div class="fi full"><label>Patient *</label><select id="a-p"><option value="">Select Patient</option></select></div>
+      <div class="fi full"><label>Doctor *</label><select id="a-d"><option value="">Select Doctor</option></select></div>
+      <div class="fi"><label>Date *</label><input id="a-dt" type="date"/></div>
+      <div class="fi"><label>Time *</label><input id="a-t" type="time"/></div>
+      <div class="fi full"><label>Notes</label><textarea id="a-n" rows="2" placeholder="Reason for visit…"></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeM('am')">Cancel</button>
+      <button class="btn btn-teal" onclick="addAppt()">Schedule</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── API base URL — set via nginx proxy or direct ───────────
+  const API = window.API_URL || '';   // empty = same origin (nginx proxies /api/)
+
+  // ── Navigation ─────────────────────────────────────────────
+  const titles = {dashboard:'Dashboard',patients:'Patient Registry',doctors:'Medical Staff',appointments:'Appointments',departments:'Departments'};
+  function go(p){
+    document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));
+    document.getElementById('pg-'+p).classList.add('on');
+    document.querySelectorAll('.ni').forEach(x=>{
+      if(x.textContent.trim().toLowerCase().startsWith(p.slice(0,4))) x.classList.add('on');
+    });
+    document.getElementById('ptitle').textContent = titles[p];
+    ({dashboard:loadDash,patients:loadPatients,doctors:loadDoctors,appointments:loadAppts,departments:loadDepts}[p])();
+  }
+
+  // ── Fetch helper ───────────────────────────────────────────
+  async function api(path, opts={}){
+    const r = await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts});
+    if(!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  // ── Health ─────────────────────────────────────────────────
+  async function checkHealth(){
+    try{
+      await api('/api/health');
+      document.getElementById('adot').className='dot ok';
+      document.getElementById('astat').textContent='Flask API Connected';
+    }catch{
+      document.getElementById('adot').className='dot err';
+      document.getElementById('astat').textContent='API Offline';
+    }
+  }
+
+  // ── Dashboard ──────────────────────────────────────────────
+  async function loadDash(){
+    try{
+      const s = await api('/api/stats');
+      document.getElementById('s-pat').textContent = s.totalPatients;
+      document.getElementById('s-doc').textContent = s.totalDoctors;
+      document.getElementById('s-apt').textContent = s.scheduledAppointments;
+      document.getElementById('s-dep').textContent = s.totalDepartments;
+
+      const pts = await api('/api/patients/');
+      document.getElementById('d-patients').innerHTML = pts.slice(0,5).map(p=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)">
+          <div><div class="tname">${p.name}</div><div style="font-size:12px;color:var(--ink3)">${p.gender}, ${p.age} yrs</div></div>
+          <span class="blood">${p.blood_group||'–'}</span>
+        </div>`).join('') || '<div class="empty"><div class="empty-i">🧑</div>No patients</div>';
+
+      const apts = await api('/api/appointments/');
+      document.getElementById('d-appts').innerHTML = apts.slice(0,5).map(a=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)">
+          <div><div class="tname">${a.patient_name}</div><div style="font-size:12px;color:var(--ink3)">${a.doctor_name}</div></div>
+          <span class="tag tag-${a.status.toLowerCase()=='scheduled'?'sched':a.status.toLowerCase()=='completed'?'done':'cancel'}">${a.status}</span>
+        </div>`).join('') || '<div class="empty"><div class="empty-i">📅</div>No appointments</div>';
+    }catch(e){console.error(e)}
+  }
+
+  // ── Patients ───────────────────────────────────────────────
+  async function loadPatients(){
+    const tb=document.getElementById('ptb');
+    try{
+      const d=await api('/api/patients/');
+      if(!d.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-i">🧑</div>No patients</div></td></tr>';return}
+      tb.innerHTML=d.map(p=>`<tr>
+        <td class="tid">#${p.id}</td>
+        <td class="tname">${p.name}</td>
+        <td>${p.age}</td><td>${p.gender}</td><td>${p.phone||'–'}</td>
+        <td><span class="blood">${p.blood_group||'–'}</span></td>
+        <td><button class="btn btn-del" onclick="delPatient(${p.id})">✕ Delete</button></td>
+      </tr>`).join('');
+    }catch{tb.innerHTML='<tr><td colspan="7"><div class="empty">Error loading</div></td></tr>'}
+  }
+  async function addPatient(){
+    const b={name:document.getElementById('p-n').value,age:document.getElementById('p-a').value,
+      gender:document.getElementById('p-g').value,phone:document.getElementById('p-ph').value,
+      email:document.getElementById('p-e').value,address:document.getElementById('p-ad').value,
+      blood_group:document.getElementById('p-b').value};
+    if(!b.name||!b.age||!b.gender) return toast('Fill required fields','err');
+    try{await api('/api/patients/',{method:'POST',body:JSON.stringify(b)});closeM('pm');loadPatients();loadDash();toast('Patient added ✓');}
+    catch(e){toast('Error: '+e.message,'err')}
+  }
+  async function delPatient(id){
+    if(!confirm('Delete this patient?')) return;
+    try{await api('/api/patients/'+id,{method:'DELETE'});loadPatients();toast('Patient removed');}
+    catch(e){toast('Error','err')}
+  }
+
+  // ── Doctors ────────────────────────────────────────────────
+  async function loadDoctors(){
+    const tb=document.getElementById('dtb');
+    try{
+      const d=await api('/api/doctors/');
+      if(!d.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="empty-i">⚕</div>No doctors</div></td></tr>';return}
+      tb.innerHTML=d.map(doc=>`<tr>
+        <td class="tid">#${doc.id}</td>
+        <td class="tname">${doc.name}</td>
+        <td>${doc.specialization}</td><td>${doc.phone||'–'}</td>
+        <td><span class="tag tag-${doc.availability==='Available'?'avail':doc.availability==='Busy'?'busy':'leave'}">${doc.availability}</span></td>
+        <td><button class="btn btn-del" onclick="delDoctor(${doc.id})">✕ Delete</button></td>
+      </tr>`).join('');
+    }catch{tb.innerHTML='<tr><td colspan="6"><div class="empty">Error loading</div></td></tr>'}
+  }
+  async function addDoctor(){
+    const b={name:document.getElementById('d-n').value,specialization:document.getElementById('d-s').value,
+      phone:document.getElementById('d-ph').value,email:document.getElementById('d-e').value,
+      availability:document.getElementById('d-av').value};
+    if(!b.name||!b.specialization) return toast('Fill required fields','err');
+    try{await api('/api/doctors/',{method:'POST',body:JSON.stringify(b)});closeM('dm');loadDoctors();loadDash();toast('Doctor added ✓');}
+    catch(e){toast('Error: '+e.message,'err')}
+  }
+  async function delDoctor(id){
+    if(!confirm('Delete this doctor?')) return;
+    try{await api('/api/doctors/'+id,{method:'DELETE'});loadDoctors();toast('Doctor removed');}
+    catch(e){toast('Error','err')}
+  }
+
+  // ── Appointments ───────────────────────────────────────────
+  async function loadAppts(){
+    const tb=document.getElementById('atb');
+    try{
+      const d=await api('/api/appointments/');
+      if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-i">📅</div>No appointments</div></td></tr>';return}
+      tb.innerHTML=d.map(a=>`<tr>
+        <td class="tid">#${a.id}</td>
+        <td class="tname">${a.patient_name}</td>
+        <td>${a.doctor_name}</td><td>${a.specialization}</td>
+        <td>${a.appointment_date?.slice(0,10)||'–'}</td>
+        <td>${a.appointment_time?.slice(0,5)||'–'}</td>
+        <td><span class="tag tag-${a.status==='Scheduled'?'sched':a.status==='Completed'?'done':'cancel'}">${a.status}</span></td>
+        <td style="display:flex;gap:5px">
+          <button class="btn btn-ok" onclick="updAppt(${a.id},'Completed')">✓ Done</button>
+          <button class="btn btn-del" onclick="updAppt(${a.id},'Cancelled')">✕</button>
+        </td>
+      </tr>`).join('');
+    }catch{tb.innerHTML='<tr><td colspan="8"><div class="empty">Error loading</div></td></tr>'}
+  }
+  async function loadDD(){
+    const [pts,docs]=await Promise.all([api('/api/patients/'),api('/api/doctors/')]);
+    document.getElementById('a-p').innerHTML='<option value="">Select Patient</option>'+pts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    document.getElementById('a-d').innerHTML='<option value="">Select Doctor</option>'+docs.map(d=>`<option value="${d.id}">${d.name} – ${d.specialization}</option>`).join('');
+  }
+  async function addAppt(){
+    const b={patient_id:document.getElementById('a-p').value,doctor_id:document.getElementById('a-d').value,
+      appointment_date:document.getElementById('a-dt').value,appointment_time:document.getElementById('a-t').value,
+      notes:document.getElementById('a-n').value};
+    if(!b.patient_id||!b.doctor_id||!b.appointment_date||!b.appointment_time) return toast('Fill all fields','err');
+    try{await api('/api/appointments/',{method:'POST',body:JSON.stringify(b)});closeM('am');loadAppts();loadDash();toast('Appointment scheduled ✓');}
+    catch(e){toast('Error: '+e.message,'err')}
+  }
+  async function updAppt(id,status){
+    try{await api('/api/appointments/'+id+'/status',{method:'PUT',body:JSON.stringify({status})});loadAppts();toast('Status: '+status);}
+    catch{toast('Error','err')}
+  }
+
+  // ── Departments ────────────────────────────────────────────
+  async function loadDepts(){
+    const g=document.getElementById('dgrid');
+    try{
+      const d=await api('/api/departments/');
+      g.innerHTML=d.map(dep=>{
+        const pct=dep.capacity>0?Math.round(dep.current_patients/dep.capacity*100):0;
+        return`<div class="dc">
+          <div class="dc-name">${dep.name}</div>
+          <div class="dc-head">${dep.head_doctor}</div>
+          <div class="dc-bar"><div class="dc-fill" style="width:${pct}%"></div></div>
+          <div class="dc-stat"><span>${dep.current_patients} patients</span><span>${pct}% capacity</span></div>
+        </div>`;
+      }).join('');
+    }catch{g.innerHTML='<div class="empty">Error loading</div>'}
+  }
+
+  // ── UI helpers ─────────────────────────────────────────────
+  function openM(id){document.getElementById(id).classList.add('on')}
+  function closeM(id){document.getElementById(id).classList.remove('on')}
+  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
+  function filt(tid,sid){
+    const q=document.getElementById(sid).value.toLowerCase();
+    document.querySelectorAll('#'+tid+' tbody tr').forEach(r=>r.style.display=r.textContent.toLowerCase().includes(q)?'':'none');
+  }
+  let tt;
+  function toast(msg,type='ok'){
+    const t=document.getElementById('toast');
+    t.textContent=(type==='ok'?'✅ ':'❌ ')+msg;
+    t.className='toast show '+type;
+    clearTimeout(tt);tt=setTimeout(()=>t.className='toast',3000);
+  }
+
+  // ── Init ───────────────────────────────────────────────────
+  checkHealth();
+  loadDash();
+  setInterval(checkHealth,30000);
+</script>
+</body>
+</html>
