@@ -404,7 +404,8 @@ async function loadDash(){
     document.getElementById('s-dep').textContent = s.totalDepartments || 0;
 
     // ✅ Patients
-    const pts = await api('/api/patients/');
+    const ptsRes = await api('/api/patients/');
+    const pts = ptsRes.patients || ptsRes;
     document.getElementById('d-patients').innerHTML =
       pts.length ? pts.slice(0,5).map(p=>`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)">
@@ -420,7 +421,8 @@ async function loadDash(){
       : '<div class="empty"><div class="empty-i">🧑</div>No patients</div>';
 
     // ✅ Appointments
-    const apts = await api('/api/appointments/');
+    const aptsRes = await api('/api/appointments/');
+    const apts = aptsRes.appointments || aptsRes;
     document.getElementById('d-appts').innerHTML =
      (Array.isArray(apts) && apts.length)
       ? apts.slice(0,5).map(a => {
@@ -464,7 +466,13 @@ async function loadDash(){
   : '<div class="empty">No appointments</div>';
 
   }catch(e){
-    console.error("Dashboard error:", e);
+  console.error("Dashboard error:", e);
+
+  document.getElementById('d-patients').innerHTML =
+    '<div class="empty">Error loading patients</div>';
+
+  document.getElementById('d-appts').innerHTML =
+    '<div class="empty">Error loading appointments</div>';
   }
 }
 
