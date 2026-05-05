@@ -405,7 +405,11 @@ async function loadDash(){
 
     // ✅ Patients
     const ptsRes = await api('/api/patients/');
-    const pts = ptsRes.patients || ptsRes;
+    console.log("Patients API:", ptsRes);
+    
+    const pts = Array.isArray(ptsRes)
+      ? ptsRes
+      : ptsRes.patients || ptsRes.data || [];
     document.getElementById('d-patients').innerHTML =
       pts.length ? pts.slice(0,5).map(p=>`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)">
@@ -422,7 +426,11 @@ async function loadDash(){
 
     // ✅ Appointments
     const aptsRes = await api('/api/appointments/');
-    const apts = aptsRes.appointments || aptsRes;
+    console.log("Appointments API:", aptsRes);
+
+    const apts = Array.isArray(aptsRes)
+      ? aptsRes
+      : aptsRes.appointments || aptsRes.data || [];
     document.getElementById('d-appts').innerHTML =
      (Array.isArray(apts) && apts.length)
       ? apts.slice(0,5).map(a => {
