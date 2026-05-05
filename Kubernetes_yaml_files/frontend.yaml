@@ -29,7 +29,7 @@ spec:
           command: ['sh','-c','until nc -z backend-service 5000; do echo waiting for backend; sleep 3; done']
       containers:
         - name: frontend
-          image: saimanoj0113/hospital-frontend:latest
+          image: nandakishoreparnati/3tier-hospital-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

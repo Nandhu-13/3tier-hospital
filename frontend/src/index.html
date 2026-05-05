@@ -359,7 +359,7 @@
 
 <script>
   // ── API base URL — set via nginx proxy or direct ───────────
-  const API = "";   // empty = same origin (nginx proxies /api/)
+  const API_URL = "http://20.249.5.142:5000";   // empty = same origin (nginx proxies /api/)
 
   // ── Navigation ─────────────────────────────────────────────
   const titles = {dashboard:'Dashboard',patients:'Patient Registry',doctors:'Medical Staff',appointments:'Appointments',departments:'Departments'};
@@ -406,7 +406,8 @@ async function loadDash(){
     // ✅ Patients
     const ptsRes = await api('/api/patients/');
     console.log("Patients API:", ptsRes);
-    
+    console.log(await api('/api/patients/'))
+
     const pts = Array.isArray(ptsRes)
       ? ptsRes
       : ptsRes.patients || ptsRes.data || [];

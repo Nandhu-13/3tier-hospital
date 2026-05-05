@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: saimanoj0113/hospital-backend:latest  
+          image: nandakishoreparnati/3tier-hospital-backend:latest  
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
