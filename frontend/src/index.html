@@ -376,7 +376,7 @@
 
   // ── Fetch helper ───────────────────────────────────────────
   async function api(path, opts={}){
-    const r = await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts});
+    const r = await fetch(API_URL+path,{headers:{'Content-Type':'application/json'},...opts});
     if(!r.ok) throw new Error(await r.text());
     return r.json();
   }
@@ -396,7 +396,13 @@
   // ── Dashboard ──────────────────────────────────────────────
 async function loadDash(){
   try{
-    const s = await api('/api/stats');
+    async function loadDash(){
+      let s = {};
+      try {
+        s = await api('/api/stats');
+      } catch (e) {
+        console.warn("Stats API failed, ignoring");
+      }
 
     document.getElementById('s-pat').textContent = s.totalPatients || 0;
     document.getElementById('s-doc').textContent = s.totalDoctors || 0;
@@ -404,7 +410,12 @@ async function loadDash(){
     document.getElementById('s-dep').textContent = s.totalDepartments || 0;
 
     // ✅ Patients
-    const ptsRes = await api('/api/patients/');
+    let ptsRes = [];
+    try {
+      ptsRes = await api('/api/patients/');
+    } catch (e) {
+      console.warn("Patients API failed");
+    }
     console.log("Patients API:", ptsRes);
     console.log(await api('/api/patients/'))
 
@@ -426,7 +437,12 @@ async function loadDash(){
       : '<div class="empty"><div class="empty-i">🧑</div>No patients</div>';
 
     // ✅ Appointments
-    const aptsRes = await api('/api/appointments/');
+    let aptsRes = [];
+    try {
+      aptsRes = await api('/api/appointments/');
+    } catch (e) {
+      console.warn("Appointments API failed");
+    }
     console.log("Appointments API:", aptsRes);
 
     const apts = Array.isArray(aptsRes)
