@@ -220,6 +220,11 @@
   <div class="topbar">
     <div class="page-title" id="ptitle">Dashboard</div>
     <div class="topbar-r">
+      <!-- ✅ FIX 1: Added missing conn-pill with adot + astat elements that checkHealth() needs -->
+      <div class="conn-pill">
+        <div class="dot" id="adot"></div>
+        <span id="astat">Connecting…</span>
+      </div>
       <div class="az-badge">3Tier Kings</div>
     </div>
   </div>
@@ -232,6 +237,8 @@
         <div class="sc"><div class="sc-ic t">🧑</div><div><div class="sc-lbl">Patients</div><div class="sc-val" id="s-pat">–</div><div class="sc-sub">Active records</div></div></div>
         <div class="sc"><div class="sc-ic b">⚕</div><div><div class="sc-lbl">Doctors</div><div class="sc-val" id="s-doc">–</div><div class="sc-sub">On staff</div></div></div>
         <div class="sc"><div class="sc-ic g">📅</div><div><div class="sc-lbl">Scheduled</div><div class="sc-val" id="s-apt">–</div><div class="sc-sub">Appointments</div></div></div>
+        <!-- ✅ FIX 2: Added missing s-dep stat card that loadDash() tries to update -->
+        <div class="sc"><div class="sc-ic a">🏥</div><div><div class="sc-lbl">Departments</div><div class="sc-val" id="s-dep">–</div><div class="sc-sub">Active units</div></div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div class="panel">
@@ -358,8 +365,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── API base URL — set via nginx proxy or direct ───────────
-  const API_URL = "http://20.249.5.142:5000";   // empty = same origin (nginx proxies /api/)
+  // ── API base URL ───────────────────────────────────────────
+  const API = "http://20.196.200.253:5000";
 
   // ── Navigation ─────────────────────────────────────────────
   const titles = {dashboard:'Dashboard',patients:'Patient Registry',doctors:'Medical Staff',appointments:'Appointments',departments:'Departments'};
@@ -376,12 +383,13 @@
 
   // ── Fetch helper ───────────────────────────────────────────
   async function api(path, opts={}){
-    const r = await fetch(API_URL+path,{headers:{'Content-Type':'application/json'},...opts});
+    const r = await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts});
     if(!r.ok) throw new Error(await r.text());
     return r.json();
   }
 
   // ── Health ─────────────────────────────────────────────────
+  // ✅ FIX 1: adot and astat now exist in the DOM (added to topbar above)
   async function checkHealth(){
     try{
       await api('/api/health');
@@ -394,112 +402,59 @@
   }
 
   // ── Dashboard ──────────────────────────────────────────────
-async function loadDash(){
-  try{
-    async function loadDash(){
-      let s = {};
-      try {
-        s = await api('/api/stats');
-      } catch (e) {
-        console.warn("Stats API failed, ignoring");
-      }
+  // ✅ FIX 2: s-dep now exists in the DOM (added stat card above)
+  async function loadDash(){
+    try{
+      const s = await api('/api/stats');
 
-    document.getElementById('s-pat').textContent = s.totalPatients || 0;
-    document.getElementById('s-doc').textContent = s.totalDoctors || 0;
-    document.getElementById('s-apt').textContent = s.scheduledAppointments || 0;
-    document.getElementById('s-dep').textContent = s.totalDepartments || 0;
+      document.getElementById('s-pat').textContent = s.totalPatients || 0;
+      document.getElementById('s-doc').textContent = s.totalDoctors || 0;
+      document.getElementById('s-apt').textContent = s.scheduledAppointments || 0;
+      document.getElementById('s-dep').textContent = s.totalDepartments || 0;
 
-    // ✅ Patients
-    let ptsRes = [];
-    try {
-      ptsRes = await api('/api/patients/');
-    } catch (e) {
-      console.warn("Patients API failed");
+      // Patients
+      const pts = await api('/api/patients/');
+      document.getElementById('d-patients').innerHTML =
+        pts.length ? pts.slice(0,5).map(p=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)">
+            <div>
+              <div class="tname">${p.name || '-'}</div>
+              <div style="font-size:12px;color:var(--ink3)">
+                ${p.gender || '-'}, ${p.age || '-'} yrs
+              </div>
+            </div>
+            <span class="blood">${p.blood_group || '–'}</span>
+          </div>
+        `).join('')
+        : '<div class="empty"><div class="empty-i">🧑</div>No patients</div>';
+
+      // Appointments
+      const apts = await api('/api/appointments/');
+      document.getElementById('d-appts').innerHTML =
+       (Array.isArray(apts) && apts.length)
+        ? apts.slice(0,5).map(a => {
+          const status = (a.status || '').toLowerCase();
+          let tagClass = 'cancel';
+          if (status === 'scheduled') tagClass = 'sched';
+          else if (status === 'completed') tagClass = 'done';
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);gap:10px;">
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <div class="tname" style="font-weight:600;">${a.patient_name || '-'}</div>
+                <div style="font-size:12px;color:var(--ink3);">${a.doctor_name || '-'}</div>
+              </div>
+              <div style="display:flex;align-items:center;">
+                <span class="tag tag-${tagClass}">${a.status || '-'}</span>
+              </div>
+            </div>
+          `;
+        }).join('')
+        : '<div class="empty">No appointments</div>';
+
+    }catch(e){
+      console.error("Dashboard error:", e);
     }
-    console.log("Patients API:", ptsRes);
-    console.log(await api('/api/patients/'))
-
-    const pts = Array.isArray(ptsRes)
-      ? ptsRes
-      : ptsRes.patients || ptsRes.data || [];
-    document.getElementById('d-patients').innerHTML =
-      pts.length ? pts.slice(0,5).map(p=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)">
-          <div>
-            <div class="tname">${p.name || '-'}</div>
-            <div style="font-size:12px;color:var(--ink3)">
-              ${p.gender || '-'}, ${p.age || '-'} yrs
-            </div>
-          </div>
-          <span class="blood">${p.blood_group || '–'}</span>
-        </div>
-      `).join('')
-      : '<div class="empty"><div class="empty-i">🧑</div>No patients</div>';
-
-    // ✅ Appointments
-    let aptsRes = [];
-    try {
-      aptsRes = await api('/api/appointments/');
-    } catch (e) {
-      console.warn("Appointments API failed");
-    }
-    console.log("Appointments API:", aptsRes);
-
-    const apts = Array.isArray(aptsRes)
-      ? aptsRes
-      : aptsRes.appointments || aptsRes.data || [];
-    document.getElementById('d-appts').innerHTML =
-     (Array.isArray(apts) && apts.length)
-      ? apts.slice(0,5).map(a => {
-
-      const status = (a.status || '').toLowerCase();
-
-      let tagClass = 'cancel';
-      if (status === 'scheduled') tagClass = 'sched';
-      else if (status === 'completed') tagClass = 'done';
-
-      return `
-        <div style="
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          padding:12px 20px;
-          border-bottom:1px solid var(--border);
-          gap:10px;
-        ">
-
-          <!-- Left content -->
-          <div style="display:flex;flex-direction:column;gap:3px;">
-            <div class="tname" style="font-weight:600;">
-              ${a.patient_name || '-'}
-            </div>
-            <div style="font-size:12px;color:var(--ink3);">
-              ${a.doctor_name || '-'}
-            </div>
-          </div>
-
-          <!-- Right status -->
-          <div style="display:flex;align-items:center;">
-            <span class="tag tag-${tagClass}">
-              ${a.status || '-'}
-            </span>
-          </div>
-
-        </div>
-      `;
-  }).join('')
-  : '<div class="empty">No appointments</div>';
-
-  }catch(e){
-  console.error("Dashboard error:", e);
-
-  document.getElementById('d-patients').innerHTML =
-    '<div class="empty">Error loading patients</div>';
-
-  document.getElementById('d-appts').innerHTML =
-    '<div class="empty">Error loading appointments</div>';
   }
-}
 
   // ── Patients ───────────────────────────────────────────────
   async function loadPatients(){
@@ -601,6 +556,7 @@ async function loadDash(){
   // ── Departments ────────────────────────────────────────────
   async function loadDepts(){
     const g=document.getElementById('dgrid');
+    if(!g) return;
     try{
       const d=await api('/api/departments/');
       g.innerHTML=d.map(dep=>{
@@ -612,7 +568,7 @@ async function loadDash(){
           <div class="dc-stat"><span>${dep.current_patients} patients</span><span>${pct}% capacity</span></div>
         </div>`;
       }).join('');
-    }catch{g.innerHTML='<div class="empty">Error loading</div>'}
+    }catch(e){g.innerHTML='<div class="empty">Error loading</div>'}
   }
 
   // ── UI helpers ─────────────────────────────────────────────
