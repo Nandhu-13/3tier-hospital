@@ -30,7 +30,7 @@ spec:
       containers:
         - name: frontend
           image: nandakishoreparnati/3tier-hospital-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
